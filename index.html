@@ -723,12 +723,22 @@ function applySokuon(units) {
             continue;
           }
 
-          if (unit === "SHI" && next === "I") {
-            arr[i] = "TI:";
-            arr.splice(i + 1, 1);
-            i--;
-            continue;
-          }
+if (unit === "SHI" && next === "I" && i === 0) {
+  const next2 = arr[i + 2] || "";
+  const next3 = arr[i + 3] || "";
+
+  const singleFollowers = ["GA", "SA", "SHI", "NA", "NE", "NO", "YA", "YO", "WA", "NN"];
+  const shouldForceTii =
+    singleFollowers.includes(next2) ||
+    (next2 === "JA" && next3 === "NN");
+
+  if (shouldForceTii) {
+    arr[i] = "TI:";
+    arr.splice(i + 1, 1);
+    i--;
+    continue;
+  }
+}
 
           arr[i] = transformMiddleUnit(unit, next, prev, i, arr, originalText);
         }
@@ -791,6 +801,10 @@ function applySokuon(units) {
         if (unit === "JI") {
           return "JA";
         }
+
+	if (unit === "SHI") {
+	  return "CHA";
+	}
 
         const finalMap = {
           "I": "YA:",
@@ -1093,7 +1107,7 @@ function applySokuon(units) {
           "POE:": "ポエー",
           "MOE:": "モエー",
 
-          "OEYA:": "オエヤー",
+          "OEYA:": "オェヤー",
 
           "YE": "イェ",
           "DEON": "デョン",
@@ -1215,12 +1229,6 @@ function applySokuon(units) {
             continue;
           }
 
-          if (cur === "TI:") {
-            result.push("CHA");
-            i++;
-            continue;
-          }
-
           if (cur === "DOE:") {
             result.push("DEON");
             i++;
@@ -1289,18 +1297,18 @@ function applySokuon(units) {
           };
         }
 
-        if (str.endsWith("CHA YAN")) {
+        if (str.endsWith("SHI: YAN")) {
           return {
             type: "partial",
-            from: "CHA YAN",
+            from: "SHI: YAN",
             to: "ティーヤン"
           };
         }
 
-        if (str.endsWith("CHA JAN")) {
+        if (str.endsWith("SHI: JAN")) {
           return {
             type: "partial",
-            from: "CHA JAN",
+            from: "SHI: JAN",
             to: "ティージャン"
           };
         }
