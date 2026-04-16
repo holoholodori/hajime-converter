@@ -553,27 +553,35 @@
         return applySokuon(rawUnits);
       }
 
-      // 促音っを次の子音の重なりとして内部発音記号へ反映する。
-      // 例：っこ→KKO、っちゃ→CCHA
-      function applySokuon(units) {
-        const result = [];
+// 促音っを次の音に吸収して、重子音記号へ置き換える。
+// 重要：っの次の音はここで消費するので、元の音を二重に残さない。
+function applySokuon(units) {
+  const result = [];
 
-        for (let i = 0; i < units.length; i++) {
-          const unit = units[i];
+  for (let i = 0; i < units.length; i++) {
+    const unit = units[i];
 
-          if (unit === "っ") {
-            const next = units[i + 1] || "";
-            if (next) {
-              result.push(makeGeminate(next));
-            }
-            continue;
-          }
+    if (unit === "っ") {
+      const next = units[i + 1] || "";
 
-          result.push(unit);
-        }
-
-        return result;
+      // 文末のっなど、次が無い場合はそのまま捨てる
+      if (!next) {
+        continue;
       }
+
+      // 次の音を促音化して追加
+      result.push(makeGeminate(next));
+
+      // 次の音はもう使ったので飛ばす
+      i++;
+      continue;
+    }
+
+    result.push(unit);
+  }
+
+  return result;
+}
 
       // 次の音をもとに、促音用の重子音記号を作る。
       // 例：KO→KKO、CHA→CCHA
