@@ -1,335 +1,26 @@
-﻿<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>轟はじめ語変換ジェネレーター</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 1100px;
-      margin: 32px auto;
-      padding: 0 16px 40px;
-      line-height: 1.7;
-      color: #222;
-    }
-
-    h1 {
-      margin-bottom: 8px;
-      font-size: 28px;
-    }
-
-    h2 {
-      margin-top: 28px;
-      margin-bottom: 10px;
-      font-size: 20px;
-    }
-
-    .note {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .warn {
-      font-size: 14px;
-      color: #a33;
-      font-weight: bold;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 140px;
-      padding: 12px;
-      box-sizing: border-box;
-      font-size: 16px;
-      resize: vertical;
-      border: 1px solid #bbb;
-      border-radius: 6px;
-    }
-
-    .output {
-      width: 100%;
-      min-height: 90px;
-      padding: 12px;
-      box-sizing: border-box;
-      font-size: 16px;
-      border: 1px solid #bbb;
-      border-radius: 6px;
-      background: #fafafa;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin: 12px 0 18px;
-    }
-
-    button {
-      padding: 10px 16px;
-      font-size: 15px;
-      cursor: pointer;
-      border: 1px solid #888;
-      border-radius: 6px;
-      background: #f3f3f3;
-    }
-
-    button:hover {
-      background: #e9e9e9;
-    }
-
-    .box {
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 16px;
-      margin-top: 18px;
-      background: #fff;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-
-    .label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-
-    .small {
-      font-size: 13px;
-      color: #666;
-    }
-
-    code {
-      background: #f4f4f4;
-      padding: 2px 4px;
-      border-radius: 4px;
-    }
-
-    @media (min-width: 900px) {
-      .row.two {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-  </style>
-</head>
-<body>
-  <h1>轟はじめ語変換ジェネレーター</h1>
-  <p>轟はじめの特徴的な喋り方を雰囲気で再現するジェネレーターです。</p>
-  <p class="note">
-    ひらがな・カタカナで入力してください。
-  </p>
-
-  <div class="box">
-    <h2>通常変換</h2>
-    <label class="label" for="inputText">日本語入力</label>
-    <textarea id="inputText" placeholder="例：やさしいやん / おい / くすんだむらさき"></textarea>
-
-    <div class="buttons">
-      <button type="button" id="btnConvert">変換する</button>
-      <button type="button" id="btnCopyPhoneme">内部発音記号をコピー</button>
-      <button type="button" id="btnCopyKatakana">カタカナ出力をコピー</button>
-      <button type="button" id="btnClear">クリア</button>
-    </div>
-
-    <div class="row two">
-      <div>
-        <label class="label">変換後の内部発音記号</label>
-        <div id="phonemeOutput" class="output"></div>
-        <p class="small">
-          内部処理用の仮記号。例：<code>YO TO TI: YA NN</code>
-        </p>
-      </div>
-
-      <div>
-        <label class="label" for="katakanaOutput">日本語としての聞こえ方（カタカナ）</label>
-        <textarea id="katakanaOutput"></textarea>
-        <p class="small">内部発音記号からカタカナへ戻した結果。</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="box">
-    <h2>逆変換</h2>
-    <p class="warn">
-      逆変換は推定復元です。元の日本語を完全に復元するものではないため、結果は目安として見てください。
-    </p>
-
-    <label class="label" for="reverseInput">カタカナ入力</label>
-    <textarea id="reverseInput"></textarea>
-
-    <div class="buttons">
-      <button type="button" id="btnUseKatakana">上のカタカナ出力をここに入れる</button>
-      <button type="button" id="btnReverse">逆変換する</button>
-      <button type="button" id="btnCopyReverse">逆変換結果をコピー</button>
-      <button type="button" id="btnClearReverse">クリア</button>
-    </div>
-
-    <label class="label">推定復元結果</label>
-    <div id="reverseOutput" class="output"></div>
-  </div>
-
-  <div class="box">
-    <h2>その他</h2>
-
-    <p>
-      参考動画：<br>
-      <a href="https://youtu.be/i3Hhid-yemY?si=GOjIwB4fqFO6cLml" target="_blank">
-        轟はじめの発音の言語学的考察 #ずんだもん解説
-      </a><br>
-      （制作の参考にさせていただきました）
-    </p>
-    <p>・変換は完璧ではありません。参考程度でお願いします。</p>
-  </div>
-  <script>
-    (function () {
-      "use strict";
-
-      const inputText = document.getElementById("inputText");
-      const phonemeOutput = document.getElementById("phonemeOutput");
-      const katakanaOutput = document.getElementById("katakanaOutput");
-      const reverseInput = document.getElementById("reverseInput");
-      const reverseOutput = document.getElementById("reverseOutput");
-
-      document.getElementById("btnConvert").addEventListener("click", function () {
-        try {
-          const result = processWholeText(inputText.value);
-          phonemeOutput.innerText = result.phoneme;
-          katakanaOutput.value = result.katakana;
-        } catch (e) {
-          console.error(e);
-        }
-      });
-
-      document.getElementById("btnCopyPhoneme").addEventListener("click", function () {
-        copyText(phonemeOutput.innerText);
-      });
-
-      document.getElementById("btnCopyKatakana").addEventListener("click", function () {
-        copyText(katakanaOutput.value);
-      });
-
-      document.getElementById("btnClear").addEventListener("click", function () {
-        inputText.value = "";
-        phonemeOutput.innerText = "";
-        katakanaOutput.value = "";
-        errorOutput.innerText = "";
-      });
-
-      document.getElementById("btnUseKatakana").addEventListener("click", function () {
-        reverseInput.value = katakanaOutput.value;
-      });
-
-      document.getElementById("btnReverse").addEventListener("click", function () {
-        try {
-          errorOutput.innerText = "";
-          reverseOutput.innerText = reverseEstimate(reverseInput.value);
-        } catch (e) {
-          console.error(e);
-        }
-      });
-
-      document.getElementById("btnCopyReverse").addEventListener("click", function () {
-        copyText(reverseOutput.innerText);
-      });
-
-      document.getElementById("btnClearReverse").addEventListener("click", function () {
-        reverseInput.value = "";
-        reverseOutput.innerText = "";
-      });
-
-      function copyText(text) {
-        if (!text) return;
-        navigator.clipboard.writeText(text).catch(function () {
-          alert("コピーに失敗しました");
-        });
-      }
-
-      function processWholeText(text) {
-        const tokens = splitByKanaRuns(text);
-        const phonemeParts = [];
-        const kataParts = [];
-
-        for (let i = 0; i < tokens.length; i++) {
-          const token = tokens[i];
-
-          if (token.isKana) {
-            const baseUnits = kanaToBaseUnits(token.text);
-            const transformedUnits = transformPhonemeUnits(baseUnits, token.text);
-            const phraseResult = phraseReplace(transformedUnits, token.text);
-
-            phonemeParts.push(unitsToDisplayString(transformedUnits));
-
-            let kana = phonemeUnitsToKatakana(transformedUnits);
-
-            if (phraseResult.type === "direct") {
-              kana = phraseResult.value;
-            } else if (phraseResult.type === "partial") {
-              const fromKana = phonemeUnitsToKatakana(phraseResult.from.split(" "));
-              kana = kana.replace(fromKana, phraseResult.to);
-            }
-
-            kataParts.push(kana);
-          } else {
-            phonemeParts.push(token.text);
-            kataParts.push(token.text);
-          }
-        }
-
-        return {
-          phoneme: phonemeParts.join(" "),
-          katakana: kataParts.join("")
-        };
-      }
-
-      function splitByKanaRuns(text) {
-        const result = [];
-        let buffer = "";
-        let currentMode = null;
-
-        for (let i = 0; i < text.length; i++) {
-          const ch = text[i];
-          const isKana = /[ぁ-んァ-ヶー]/.test(ch);
-
-          if (currentMode === null) {
-            currentMode = isKana;
-            buffer = ch;
-          } else if (currentMode === isKana) {
-            buffer += ch;
-          } else {
-            result.push({ text: buffer, isKana: currentMode });
-            buffer = ch;
-            currentMode = isKana;
-          }
-        }
-
-        if (buffer) {
-          result.push({ text: buffer, isKana: currentMode });
-        }
-
-        return result;
-      }
-
+﻿      // カタカナをひらがなへ統一する。
+      // 以後の文字判定・置換処理をひらがな基準で行うための前処理。
       function toHiragana(str) {
         return str.replace(/[\u30A1-\u30F6]/g, function (ch) {
           return String.fromCharCode(ch.charCodeAt(0) - 0x60);
         });
       }
 
+      // 内部発音記号に長音記号 : を付ける。
+      // すでに長音化済みならそのまま返す。
       function addLongMark(unit) {
         if (unit.endsWith(":")) return unit;
         return unit + ":";
       }
 
+      // 内部発音記号から長音記号 : を外す。
+      // 母音判定や通常形比較のために使う。
       function stripLongMark(unit) {
         return unit.endsWith(":") ? unit.slice(0, -1) : unit;
       }
 
+      // かな文字列をモーラ単位に分割する。
+      // 小書き文字ゃゅょぁぃぅぇぉや長音ーをまとめて、発音記号化しやすい形にする。
       function splitKanaToMoras(text) {
         const h = toHiragana(text);
         const moras = [];
@@ -376,154 +67,14 @@
         return moras;
       }
 
+      // 1モーラを内部発音記号1単位へ変換する。
+      // 例：ら→RA、きゃ→KYA、でぃ→DI
       function moraToBaseUnit(mora) {
         const long = mora.endsWith("ー");
         const core = long ? mora.slice(0, -1) : mora;
 
         const map = {
-          "あ": "A",
-          "い": "I",
-          "う": "U",
-          "え": "E",
-          "お": "O",
-
-          "か": "KA",
-          "き": "KI",
-          "く": "KU",
-          "け": "KE",
-          "こ": "KO",
-
-          "が": "GA",
-          "ぎ": "GI",
-          "ぐ": "GU",
-          "げ": "GE",
-          "ご": "GO",
-
-          "さ": "SA",
-          "し": "SHI",
-          "す": "SU",
-          "せ": "SE",
-          "そ": "SO",
-
-          "ざ": "ZA",
-          "じ": "JI",
-          "ず": "ZU",
-          "ぜ": "ZE",
-          "ぞ": "ZO",
-
-          "た": "TA",
-          "ち": "CHI",
-          "つ": "TSU",
-          "て": "TE",
-          "と": "TO",
-
-          "だ": "DA",
-          "ぢ": "JI",
-          "づ": "ZU",
-          "で": "DE",
-          "ど": "DO",
-
-          "な": "NA",
-          "に": "NI",
-          "ぬ": "NU",
-          "ね": "NE",
-          "の": "NO",
-
-          "は": "HA",
-          "ひ": "HI",
-          "ふ": "FU",
-          "へ": "HE",
-          "ほ": "HO",
-
-          "ば": "BA",
-          "び": "BI",
-          "ぶ": "BU",
-          "べ": "BE",
-          "ぼ": "BO",
-
-          "ぱ": "PA",
-          "ぴ": "PI",
-          "ぷ": "PU",
-          "ぺ": "PE",
-          "ぽ": "PO",
-
-          "ま": "MA",
-          "み": "MI",
-          "む": "MU",
-          "め": "ME",
-          "も": "MO",
-
-          "や": "YA",
-          "ゆ": "YU",
-          "よ": "YO",
-
-          "ら": "RA",
-          "り": "RI",
-          "る": "RU",
-          "れ": "RE",
-          "ろ": "RO",
-
-          "わ": "WA",
-          "を": "O",
-          "ん": "NN",
-
-          "ぁ": "A",
-          "ぃ": "I",
-          "ぅ": "U",
-          "ぇ": "E",
-          "ぉ": "O",
-          "ゃ": "YA",
-          "ゅ": "YU",
-          "ょ": "YO",
-
-          "きゃ": "KYA",
-          "きゅ": "KYU",
-          "きょ": "KYO",
-          "ぎゃ": "GYA",
-          "ぎゅ": "GYU",
-          "ぎょ": "GYO",
-          "しゃ": "SHA",
-          "しゅ": "SHU",
-          "しょ": "SHO",
-          "ちゃ": "CHA",
-          "ちゅ": "CHU",
-          "ちょ": "CHO",
-          "にゃ": "NYA",
-          "にゅ": "NYU",
-          "にょ": "NYO",
-          "ひゃ": "HYA",
-          "ひゅ": "HYU",
-          "ひょ": "HYO",
-          "みゃ": "MYA",
-          "みゅ": "MYU",
-          "みょ": "MYO",
-          "りゃ": "RYA",
-          "りゅ": "RYU",
-          "りょ": "RYO",
-          "じゃ": "JA",
-          "じゅ": "JU",
-          "じょ": "JO",
-          "びゃ": "BYA",
-          "びゅ": "BYU",
-          "びょ": "BYO",
-          "ぴゃ": "PYA",
-          "ぴゅ": "PYU",
-          "ぴょ": "PYO",
-
-          "うぁ": "WA",
-          "うぃ": "WI",
-          "うぇ": "WE",
-          "うぉ": "WO",
-          "ふぁ": "FA",
-          "ふぃ": "FI",
-          "ふぇ": "FE",
-          "ふぉ": "FO",
-          "てぃ": "TI",
-          "でぃ": "DI",
-          "つぁ": "TSA",
-          "つぃ": "TSI",
-          "つぇ": "TSE",
-          "つぉ": "TSO"
+          ...
         };
 
         let unit = map[core] || core;
@@ -531,12 +82,16 @@
         return unit;
       }
 
+      // かな文字列全体を内部発音記号列へ変換する。
+      // モーラ分割 → 基本記号化 → 促音っ反映 までをまとめて行う。
       function kanaToBaseUnits(text) {
         const moras = splitKanaToMoras(text);
         const rawUnits = moras.map(moraToBaseUnit);
         return applySokuon(rawUnits);
       }
 
+      // 促音っを次の子音の重なりとして内部発音記号へ反映する。
+      // 例：っこ→KKO、っちゃ→CCHA
       function applySokuon(units) {
         const result = [];
 
@@ -557,52 +112,24 @@
         return result;
       }
 
+      // 次の音をもとに、促音用の重子音記号を作る。
+      // 例：KO→KKO、CHA→CCHA
       function makeGeminate(unit) {
         const geminateMap = {
-          "PA": "PPA",
-          "PI": "PPI",
-          "PU": "PPU",
-          "PE": "PPE",
-          "PO": "PPO",
-          "TA": "TTA",
-          "TE": "TTE",
-          "TO": "TTO",
-          "CHI": "CCHI",
-          "CHA": "CCHA",
-          "CHU": "CCHU",
-          "CHO": "CCHO",
-          "KA": "KKA",
-          "KI": "KKI",
-          "KU": "KKU",
-          "KE": "KKE",
-          "KO": "KKO",
-          "GA": "GGA",
-          "GI": "GGI",
-          "GU": "GGU",
-          "GE": "GGE",
-          "GO": "GGO",
-          "SA": "SSA",
-          "SHI": "SSHI",
-          "SU": "SSU",
-          "SE": "SSE",
-          "SO": "SSO",
-          "SHA": "SSHA",
-          "SHU": "SSHU",
-          "SHO": "SSHO",
-          "MA": "MMA",
-          "MI": "MMI",
-          "MU": "MMU",
-          "ME": "MME",
-          "MO": "MMO"
+          ...
         };
 
         return geminateMap[unit] || ("Q" + unit);
       }
 
+      // この内部発音記号が促音由来の重子音記号かどうかを判定する。
+      // YA変換の抑制など、文脈依存の変換制御に使う。
       function isGeminateUnit(unit) {
         return /^(PPA|PPI|PPU|PPE|PPO|TTA|TTE|TTO|CCHI|CCHA|CCHU|CCHO|KKA|KKI|KKU|KKE|KKO|GGA|GGI|GGU|GGE|GGO|SSA|SSHI|SSU|SSE|SSO|SSHA|SSHU|SSHO|MMA|MMI|MMU|MME|MMO)$/.test(unit);
       }
 
+      // 内部発音記号の母音成分を取り出す。
+      // 長音化判定や連続母音の統合判定に使う。
       function getVowel(unit) {
         const u = stripLongMark(unit);
 
@@ -621,6 +148,8 @@
         return "";
       }
 
+      // 連続する内部発音記号を長音としてまとめるべきか判定する。
+      // 例：O + U、E + I などを1つの長音へ寄せる。
       function shouldMergeLongVowel(cur, next) {
         if (!cur || !next) return false;
 
@@ -637,6 +166,8 @@
         return false;
       }
 
+      // 内部発音記号列の並びを正規化する。
+      // 連続母音の長音化や、特殊な母音連結 OI → OEYA: などを先に整理する。
       function normalizeUnitSequences(units) {
         const result = [];
         let i = 0;
@@ -664,6 +195,8 @@
         return result;
       }
 
+      // 内部発音記号列に対して中間音・語尾音の変換をまとめて行う。
+      // 途中の音の崩しと、最後の音だけに適用する語尾変換を分けて処理する。
       function transformPhonemeUnits(units, originalText) {
         let arr = normalizeUnitSequences(units.slice());
 
@@ -701,6 +234,8 @@
         return arr;
       }
 
+      // 語尾ではない途中の内部発音記号を変形する。
+      // 文中だけで起きる崩し方をここで担当する。
       function transformMiddleUnit(unit, next, prev, index, allUnits, originalText) {
         if (unit === "YA") {
           if (index === 0) {
@@ -739,54 +274,20 @@
         return map[unit] || unit;
       }
 
+      // 語尾の内部発音記号だけを変形する。
+      // つまり単語やフレーズの最後の1音だけに適用する専用処理。
+      // ここで RA → DA のような「語尾ならこう読む」を定義する。
       function transformFinalUnit(unit, allUnits, originalText) {
+
+	if (unit === "RA") {
+	  return "DA";
+	}
         if (unit === "JI") {
           return "JA";
         }
 
         const finalMap = {
-          "I": "YA:",
-          "SHI": "TI:",
-          "CHI": "CHA:",
-          "NI": "NYA:",
-          "BI": "BYA:",
-          "PI": "PYA:",
-          "RI": "RYA:",
-          "E": "EYA:",
-          "KE": "KEYA:",
-          "GE": "GEYA:",
-          "SE": "SHE:",
-          "ZE": "JE:",
-          "TE": "TE:",
-          "DE": "DE:",
-          "NE": "NE:",
-          "HE": "HE:",
-          "BE": "BE:",
-          "PE": "PE:",
-          "ME": "ME:",
-          "RE": "RE:",
-          "U": "YU:",
-          "KU": "KYU:",
-          "GU": "GYU:",
-          "SU": "SHU:",
-          "ZU": "JU:",
-          "TSU": "CHU:",
-          "NU": "NYU:",
-          "FU": "HYU:",
-          "RU": "YU:",
-          "O": "OE:",
-          "KO": "KOE:",
-          "GO": "GOE:",
-          "SO": "SOE:",
-          "ZO": "ZOE:",
-          "TO": "TOE:",
-          "DO": "DOE:",
-          "NO": "NOE:",
-          "HO": "HOE:",
-          "BO": "BOE:",
-          "PO": "POE:",
-          "MO": "MOE:",
-          "RO": "DOE:"
+          ...
         };
 
         if (unit === "KI" || unit === "GI" || unit === "MI") {
@@ -796,290 +297,23 @@
         return finalMap[unit] || unit;
       }
 
+      // 内部発音記号列を表示用の文字列へ変換する。
+      // 区切りは半角スペース。
       function unitsToDisplayString(units) {
         return units.join(" ");
       }
 
+      // 内部発音記号列をカタカナ列へまとめて変換する。
+      // 画面右側の聞こえ方表示に使う。
       function phonemeUnitsToKatakana(units) {
         return units.map(unitToKatakana).join("");
       }
 
+      // 内部発音記号1単位をカタカナへ変換する。
+      // 長音付き記号や特殊記号もここで処理する。
       function unitToKatakana(unit) {
         const map = {
-          "A": "ア",
-          "I": "イ",
-          "U": "ウ",
-          "E": "エ",
-          "O": "オ",
-
-          "KA": "カ",
-          "KI": "キ",
-          "KU": "ク",
-          "KE": "ケ",
-          "KO": "コ",
-          "GA": "ガ",
-          "GI": "ギ",
-          "GU": "グ",
-          "GE": "ゲ",
-          "GO": "ゴ",
-
-          "SA": "サ",
-          "SHI": "シ",
-          "SU": "ス",
-          "SE": "セ",
-          "SO": "ソ",
-          "ZA": "ザ",
-          "JI": "ジ",
-          "ZU": "ズ",
-          "ZE": "ゼ",
-          "ZO": "ゾ",
-
-          "TA": "タ",
-          "CHI": "チ",
-          "TSU": "ツ",
-          "TE": "テ",
-          "TO": "ト",
-          "DA": "ダ",
-          "DE": "ディ",
-          "DO": "ド",
-
-          "NA": "ナ",
-          "NI": "ニ",
-          "NU": "ヌ",
-          "NE": "ネ",
-          "NO": "ノ",
-          "HA": "ハ",
-          "HI": "ヒ",
-          "FU": "フ",
-          "HE": "ヘ",
-          "HO": "ホ",
-          "BA": "バ",
-          "BI": "ビ",
-          "BU": "ブ",
-          "BE": "ベ",
-          "BO": "ボ",
-          "PA": "パ",
-          "PI": "ピ",
-          "PU": "プ",
-          "PE": "ペ",
-          "PO": "ポ",
-          "MA": "マ",
-          "MI": "ミ",
-          "MU": "ム",
-          "ME": "メ",
-          "MO": "モ",
-
-          "YA": "ヤ",
-          "YU": "ユ",
-          "YO": "ヨ",
-          "RA": "ラ",
-          "RI": "リ",
-          "RU": "ル",
-          "RE": "レ",
-          "RO": "ロ",
-          "WA": "ワ",
-          "NN": "ン",
-
-          "JA": "ジャ",
-          "JU": "ジュ",
-          "JO": "ジョ",
-          "JAN": "ジャン",
-          "YAN": "ヤン",
-
-          "KYA": "キャ",
-          "KYU": "キュ",
-          "KYO": "キョ",
-          "GYA": "ギャ",
-          "GYU": "ギュ",
-          "GYO": "ギョ",
-          "SHA": "シャ",
-          "SHU": "シュ",
-          "SHO": "ショ",
-          "SHE": "シェ",
-          "CHA": "チャ",
-          "CHU": "チュ",
-          "CHO": "チョ",
-          "NYA": "ニャ",
-          "NYU": "ニュ",
-          "NYO": "ニョ",
-          "HYA": "ヒャ",
-          "HYU": "ヒュ",
-          "HYO": "ヒョ",
-          "MYA": "ミャ",
-          "MYU": "ミュ",
-          "MYO": "ミョ",
-          "RYA": "リャ",
-          "RYU": "リュ",
-          "RYO": "リョ",
-          "BYA": "ビャ",
-          "BYU": "ビュ",
-          "BYO": "ビョ",
-          "PYA": "ピャ",
-          "PYU": "ピュ",
-          "PYO": "ピョ",
-
-          "WI": "ウィ",
-          "WE": "ウェ",
-          "WO": "ウォ",
-          "FA": "ファ",
-          "FI": "フィ",
-          "FE": "フェ",
-          "FO": "フォ",
-          "TI": "チ",
-          "DI": "ディ",
-          "TSA": "ツァ",
-          "TSI": "ツィ",
-          "TSE": "ツェ",
-          "TSO": "ツォ",
-
-          "RYI": "リィ",
-          "JE": "ジェ",
-          "OE": "オエ",
-
-          "A:": "アー",
-          "I:": "イー",
-          "U:": "ウー",
-          "E:": "エー",
-          "O:": "オー",
-
-          "KA:": "カー",
-          "KI:": "キー",
-          "KU:": "クー",
-          "KE:": "ケー",
-          "KO:": "コー",
-          "GA:": "ガー",
-          "GI:": "ギー",
-          "GU:": "グー",
-          "GE:": "ゲー",
-          "GO:": "ゴー",
-
-          "SHI:": "チャ",
-
-          "PPA:": "ッパー",
-          "PPI:": "ッピー",
-          "PPU:": "ップー",
-          "PPE:": "ッペー",
-          "PPO:": "ッポー",
-          "TTA:": "ッター",
-          "TTE:": "ッテー",
-          "TTO:": "ットー",
-          "CCHI:": "ッチー",
-          "CCHA:": "ッチャー",
-          "CCHU:": "ッチュー",
-          "CCHO:": "ッチョー",
-          "KKA:": "ッカー",
-          "KKI:": "ッキー",
-          "KKU:": "ックー",
-          "KKE:": "ッケー",
-          "KKO:": "ッコー",
-          "GGA:": "ッガー",
-          "GGI:": "ッギー",
-          "GGU:": "ッグー",
-          "GGE:": "ッゲー",
-          "GGO:": "ッゴー",
-          "SSA:": "ッサー",
-          "SSHI:": "ッシー",
-          "SSU:": "ッスー",
-          "SSE:": "ッセー",
-          "SSO:": "ッソー",
-          "SSHA:": "ッシャー",
-          "SSHU:": "ッシュー",
-          "SSHO:": "ッショー",
-          "MMA:": "ッマー",
-          "MMI:": "ッミー",
-          "MMU:": "ッムー",
-          "MME:": "ッメー",
-          "MMO:": "ッモー",
-
-          "YA:": "ヤー",
-          "KYA:": "キャー",
-          "GYA:": "ギャー",
-          "TI:": "ティー",
-          "CHA:": "チャー",
-          "NYA:": "ニャー",
-          "BYA:": "ビャー",
-          "PYA:": "ピャー",
-          "MYA:": "ミャー",
-          "RYA:": "リャー",
-
-          "EYA:": "エヤー",
-          "KEYA:": "ケヤー",
-          "GEYA:": "ゲヤー",
-          "SHE:": "シェー",
-          "JE:": "ジェー",
-          "TE:": "テー",
-          "DE:": "デー",
-          "NE:": "ネー",
-          "HE:": "ヘー",
-          "BE:": "ベー",
-          "PE:": "ペー",
-          "ME:": "メー",
-          "RE:": "レー",
-
-          "YU:": "ユー",
-          "KYU:": "キュー",
-          "GYU:": "ギュー",
-          "SHU:": "シュー",
-          "JU:": "ジュー",
-          "CHU:": "チュー",
-          "NYU:": "ニュー",
-          "HYU:": "ヒュー",
-          "MYU:": "ミュー",
-
-          "OE:": "オエー",
-          "KOE:": "コエー",
-          "GOE:": "ゴエー",
-          "SOE:": "ソエー",
-          "ZOE:": "ゾエー",
-          "TOE:": "トエー",
-          "DOE:": "ドエー",
-          "NOE:": "ノエー",
-          "HOE:": "ホエー",
-          "BOE:": "ボエー",
-          "POE:": "ポエー",
-          "MOE:": "モエー",
-
-          "OEYA:": "オエヤー",
-
-          "YE": "イェ",
-          "DEON": "デョン",
-          "PAA": "パー",
-
-          "PPA": "ッパ",
-          "PPI": "ッピ",
-          "PPU": "ップ",
-          "PPE": "ッペ",
-          "PPO": "ッポ",
-          "TTA": "ッタ",
-          "TTE": "ッテ",
-          "TTO": "ット",
-          "CCHI": "ッチ",
-          "CCHA": "ッチャ",
-          "CCHU": "ッチュ",
-          "CCHO": "ッチョ",
-          "KKA": "ッカ",
-          "KKI": "ッキ",
-          "KKU": "ック",
-          "KKE": "ッケ",
-          "KKO": "ッコ",
-          "GGA": "ッガ",
-          "GGI": "ッギ",
-          "GGU": "ッグ",
-          "GGE": "ッゲ",
-          "GGO": "ッゴ",
-          "SSA": "ッサ",
-          "SSHI": "ッシ",
-          "SSU": "ッス",
-          "SSE": "ッセ",
-          "SSO": "ッソ",
-          "SSHA": "ッシャ",
-          "SSHU": "ッシュ",
-          "SSHO": "ッショ",
-          "MMA": "ッマ",
-          "MMI": "ッミ",
-          "MMU": "ッム",
-          "MME": "ッメ",
-          "MMO": "ッモ"
+          ...
         };
 
         if (map[unit]) {
@@ -1097,6 +331,8 @@
         return unit;
       }
 
+      // 内部発音記号列の後処理を行う。
+      // 隣り合う記号の組み合わせを見て、より自然な連結形へまとめる。
       function postAdjustUnits(units) {
         const result = [];
         let i = 0;
@@ -1136,6 +372,8 @@
         return result;
       }
 
+      // 最終的な内部発音記号列の仕上げ調整を行う。
+      // 単発変換ではなく、完成直前の全体バランス調整を担当する。
       function finalPhonemeAdjust(units) {
         const result = [];
         let i = 0;
@@ -1193,6 +431,8 @@
         return result;
       }
 
+      // 特定の語や語尾パターンに対して、定型の例外置換をかける。
+      // 通常の音変換だけでは再現しにくい読みをここで上書きする。
       function phraseReplace(units, originalText) {
         const str = units.join(" ");
         const hira = toHiragana(originalText);
@@ -1204,102 +444,16 @@
           };
         }
 
-        if (str.endsWith("NA TSO YO")) {
-          return {
-            type: "partial",
-            from: "NA TSO YO",
-            to: "ニャンノヨ"
-          };
-        }
-
-        if (str.endsWith("TE NN PA YA:")) {
-          return {
-            type: "partial",
-            from: "TE NN PA YA:",
-            to: "ツェンパイ"
-          };
-        }
-
-        if (str.endsWith("NO YU:")) {
-          return {
-            type: "partial",
-            from: "NO YU:",
-            to: "ニョウ"
-          };
-        }
-
-        if (str.endsWith("CHA YAN")) {
-          return {
-            type: "partial",
-            from: "CHA YAN",
-            to: "ティーヤン"
-          };
-        }
-
-        if (str.endsWith("CHA JAN")) {
-          return {
-            type: "partial",
-            from: "CHA JAN",
-            to: "ティージャン"
-          };
-        }
-
-        if (str === "HE EYA:") {
-          return {
-            type: "direct",
-            value: "ヒャ"
-          };
-        }
-
-        if (str === "TO NN I DA") {
-          return {
-            type: "direct",
-            value: "ゾイド"
-          };
-        }
-
-        if (str === "TO NN I") {
-          return {
-            type: "direct",
-            value: "ゾイ"
-          };
-        }
-
-        return {
-          type: "normal",
-          value: units
-        };
+        ...
       }
 
+      // カタカナの聞こえ方から元の日本語っぽい形を推定復元する。
+      // 完全復元ではなく、簡易的な逆変換用。
       function reverseEstimate(text) {
         const h = toHiragana(text);
 
         return h.replace(/[ぁ-んー]+/g, function (match) {
           return match
-            .replace(/おえやー/gu, "おい")
-            .replace(/きゅー/gu, "く")
-            .replace(/ぎゅー/gu, "ぐ")
-            .replace(/みゅー/gu, "む")
-            .replace(/しゅー/gu, "す")
-            .replace(/てぃー/gu, "し")
-            .replace(/りゃー/gu, "り")
-            .replace(/びゃー/gu, "び")
-            .replace(/ぴゃー/gu, "ぴ")
-            .replace(/みゃー/gu, "み")
-            .replace(/やー/gu, "い")
-            .replace(/えやー/gu, "え")
-            .replace(/おえー/gu, "お")
-            .replace(/よ/gu, "や")
-            .replace(/と/gu, "さ")
-            .replace(/しゅ/gu, "す")
-            .replace(/きゅ/gu, "く")
-            .replace(/ぎゅ/gu, "ぐ")
-            .replace(/みゅ/gu, "む")
-            .replace(/で/gu, "れ")
-            .replace(/ど/gu, "ろ");
+            ...
         });
       }
-    })();
-  </script>
-</body>
-</html>
