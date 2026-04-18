@@ -231,24 +231,86 @@
     >
 　</a>
 </div>
-<br>
-<table border="0" cellspacing="0" cellpadding="1">
-  <tr>
-    <td>
-<form method="POST" action="comment.php?rep=1" target="com">
-<span style="font-size:18px;font-weight:100;color:#ff0000">■ </span><b>一言コメントができます。</b>（100字まで）<br>
-<input type="text" id="comment" name="comment" size="80" style="width:535;border:1px solid #00ccff">
-<input type="submit" id="submit" value=" 送信 " style="width:54"> 
-    </td></form>
-  </tr>
-  <tr>
-    <td>
-<div id="commentv" style="font-size:13px;line-height:15px;color:#666699;width:580px;height:160px;border:1px solid #00ccff;padding:8px;overflow-y:scroll;display:none;"></div>
-<iframe name="com" src="comment.php" id="com" style="width:301px;height:201px;frameborder:0px;border:0px;padding:0px;overflow:hidden;display:none;"></iframe>
-    </td>
-  </tr>
-</table>
-<br>
+<div style="margin-bottom: 16px;">
+
+  <!-- コメント投稿（別タブ） -->
+  <a href="https://forms.gle/5aJpKpeg7eXWNoJ36"
+     target="_blank"
+     rel="noopener noreferrer"
+     style="display:inline-block;
+            padding:10px 16px;
+            margin-right:10px;
+            background:#4CAF50;
+            color:#fff;
+            text-decoration:none;
+            border-radius:6px;">
+    コメントを書く
+  </a>
+
+  <!-- 更新ボタン -->
+  <button onclick="loadComments()"
+          style="padding:10px 16px;
+                 background:#2196F3;
+                 color:#fff;
+                 border:none;
+                 border-radius:6px;
+                 cursor:pointer;">
+    更新
+  </button>
+
+</div>
+<div id="comments">コメント読み込み中...</div>
+<script>
+async function loadComments() {
+  const url = "https://script.google.com/macros/s/AKfycbzwLNgjoDWK4w1rlw1VdY2WCPanZhO3IDG43baxFqvdCnlV5rYQPD3n_YJtj6UEUpwNyg/exec";
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error("HTTP " + res.status);
+    }
+
+    const data = await res.json();
+    const box = document.getElementById("comments");
+
+    if (!Array.isArray(data) || data.length === 0) {
+      box.innerHTML = "<p>まだ投稿はありません。</p>";
+      return;
+    }
+
+    box.innerHTML = data.slice().reverse().map(item => {
+      const time = item.time ?? "";
+      const name = item.name || "匿名";
+      const comment = item.comment ?? "";
+
+      return `
+        <div class="comment-item">
+          <p><strong>${escapeHtml(name)}</strong> (${escapeHtml(String(time))})</p>
+          <p>${escapeHtml(comment)}</p>
+          <hr>
+        </div>
+      `;
+    }).join("");
+  } catch (err) {
+    document.getElementById("comments").innerHTML =
+      "<p>読み込みに失敗しました。</p>";
+    console.error("loadComments error:", err);
+  }
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[s]));
+}
+
+loadComments();
+</script>
+
 <div class="box">
   <h2>関連キーワード</h2>
   <p class="small">
