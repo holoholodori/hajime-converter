@@ -12,6 +12,7 @@
       padding: 0 16px 40px;
       line-height: 1.7;
       color: #222;
+      background: #b6b9ff;
     }
 
     h1 {
@@ -121,12 +122,10 @@
 <body>
   <h1>轟はじめ語変換ジェネレーター</h1>
   <p>ばんちょーの特徴的な喋り方を再現するジェネレーターです。</p>
-  <p class="note">
-    ひらがな・カタカナで入力してください。
-    （最終更新日：2026年4月19日）
-  </p>
-
   <div class="box">
+  <p>
+    ひらがな・カタカナで入力してください。
+  </p>
     <h2>通常変換</h2>
     <label class="label" for="inputText">日本語入力</label>
     <textarea id="inputText" placeholder="例：やさしいやん / おい / くすんだむらさき"></textarea>
@@ -231,6 +230,7 @@
     >
 　</a>
 </div>
+<div class="box">
 <div style="margin-bottom: 16px;">
 
   <!-- コメント投稿（別タブ） -->
@@ -310,7 +310,7 @@ function escapeHtml(str) {
 
 loadComments();
 </script>
-
+</div>
 <div class="box">
   <h2>関連キーワード</h2>
   <p class="small">
