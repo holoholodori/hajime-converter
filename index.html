@@ -157,7 +157,7 @@
   <div class="box">
     <h2>逆変換</h2>
     <p class="warn">
-      逆変換は推定復元です。元の日本語を完全に復元するものではないため、結果は目安として見てください。
+      逆変換は推定復元です。精度を出すのが難しいため、実用性に欠けています。
     </p>
 
     <label class="label" for="reverseInput">カタカナ入力</label>
@@ -352,25 +352,17 @@ loadComments();
         copyText(katakanaOutput.value);
       });
 
-      document.getElementById("btnClear").addEventListener("click", function () {
-        inputText.value = "";
-        phonemeOutput.innerText = "";
-        katakanaOutput.value = "";
-        errorOutput.innerText = "";
-      });
-
       document.getElementById("btnUseKatakana").addEventListener("click", function () {
         reverseInput.value = katakanaOutput.value;
       });
 
-      document.getElementById("btnReverse").addEventListener("click", function () {
-        try {
-          errorOutput.innerText = "";
-          reverseOutput.innerText = reverseEstimate(reverseInput.value);
-        } catch (e) {
-          console.error(e);
-        }
-      });
+document.getElementById("btnReverse").addEventListener("click", function () {
+  try {
+    reverseOutput.innerText = reverseEstimate(reverseInput.value);
+  } catch (e) {
+    console.error(e);
+  }
+});
 
       document.getElementById("btnCopyReverse").addEventListener("click", function () {
         copyText(reverseOutput.innerText);
@@ -1508,34 +1500,79 @@ if (unit === "SHI" && next === "I" && i === 0) {
 
       // カタカナの聞こえ方から、元の日本語っぽい形を推定復元する。
       // 完全復元ではなく、簡易的な逆変換用。
-      function reverseEstimate(text) {
-        const h = toHiragana(text);
+function reverseEstimate(text) {
+  const h = toHiragana(text);
 
-        return h.replace(/[ぁ-んー]+/g, function (match) {
-          return match
-            .replace(/おえやー/gu, "おい")
-            .replace(/きゅー/gu, "く")
-            .replace(/ぎゅー/gu, "ぐ")
-            .replace(/みゅー/gu, "む")
-            .replace(/しゅー/gu, "す")
-            .replace(/てぃー/gu, "し")
-            .replace(/りゃー/gu, "り")
-            .replace(/びゃー/gu, "び")
-            .replace(/ぴゃー/gu, "ぴ")
-            .replace(/みゃー/gu, "み")
-            .replace(/やー/gu, "い")
-            .replace(/えやー/gu, "え")
-            .replace(/おえー/gu, "お")
-            .replace(/よ/gu, "や")
-            .replace(/と/gu, "さ")
-            .replace(/しゅ/gu, "す")
-            .replace(/きゅ/gu, "く")
-            .replace(/ぎゅ/gu, "ぐ")
-            .replace(/みゅ/gu, "む")
-            .replace(/で/gu, "れ")
-            .replace(/ど/gu, "ろ");
-        });
-      }
+  return h.replace(/[ぁ-んー]+/g, function (match) {
+    let s = match;
+
+    // 長いパターンから優先して戻す
+    const rules = [
+      [/おえやー/gu, "おい"],
+      [/おえー/gu, "お"],
+      [/えやー/gu, "え"],
+
+      [/てぃー/gu, "し"],
+      [/ちゃー/gu, "し"],
+      [/しゅー/gu, "す"],
+      [/ちゅー/gu, "つ"],
+      [/じゅー/gu, "ず"],
+
+      [/きゅー/gu, "く"],
+      [/ぎゅー/gu, "ぐ"],
+      [/みゅー/gu, "む"],
+      [/にゅー/gu, "ぬ"],
+      [/ひゅー/gu, "ふ"],
+      [/りゃー/gu, "り"],
+      [/びゃー/gu, "び"],
+      [/ぴゃー/gu, "ぴ"],
+      [/みゃー/gu, "み"],
+      [/やー/gu, "い"],
+
+      [/しゅ/gu, "す"],
+      [/きゅ/gu, "く"],
+      [/ぎゅ/gu, "ぐ"],
+      [/みゅ/gu, "む"],
+
+      [/けゃー/gu, "け"],
+      [/げやー/gu, "げ"],
+      [/しぇー/gu, "せ"],
+      [/じぇー/gu, "ぜ"],
+      [/こぇー/gu, "こ"],
+      [/ごぇー/gu, "ご"],
+      [/そぇー/gu, "そ"],
+      [/ぞぇー/gu, "ぞ"],
+      [/どぇー/gu, "ど"],
+      [/ほぇー/gu, "ほ"],
+      [/ぼぇー/gu, "ぼ"],
+      [/ぽぇー/gu, "ぽ"],
+      [/もぇー/gu, "も"],
+
+      [/けゃ/gu, "け"],
+      [/げゃ/gu, "げ"],
+      [/しぇ/gu, "せ"],
+      [/じぇ/gu, "ぜ"],
+      [/こぉ/gu, "こ"],
+      [/ごぉ/gu, "ご"],
+      [/そぉ/gu, "そ"],
+      [/ぞぉ/gu, "ぞ"],
+      [/どぉ/gu, "ど"],
+      [/ほぉ/gu, "ほ"],
+      [/ぼぉ/gu, "ぼ"],
+      [/ぽぉ/gu, "ぽ"],
+      [/もぉ/gu, "も"]
+    ];
+
+    for (const [pattern, replacement] of rules) {
+      s = s.replace(pattern, replacement);
+    }
+
+    // 危険な単文字置換はやらない
+    // よ→や / と→さ / ど→ろ / で→れ は削除
+
+    return s;
+  });
+}
     })();
   </script>
 </body>
