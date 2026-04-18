@@ -120,9 +120,10 @@
 </head>
 <body>
   <h1>轟はじめ語変換ジェネレーター</h1>
-  <p>ばんちょーの特徴的な喋り方を雰囲気で再現するジェネレーターです。</p>
+  <p>ばんちょーの特徴的な喋り方を再現するジェネレーターです。</p>
   <p class="note">
     ひらがな・カタカナで入力してください。
+    （最終更新日：2026年4月19日）
   </p>
 
   <div class="box">
@@ -184,7 +185,9 @@
       </a><br>
       （制作の参考にさせていただきました）
     </p>
-    <p>・変換は完璧ではありません。本人の発音も都度変わる場合があります。</p>
+    <p>・変換は完璧ではありません。本人が意識している場合や、語気の強さなどでも発音ルールが変化します。</p>
+    <p>・基本法則を元に、様々なパターンでの発音変換を追加しています。</p>
+    <p>・下部にコメント欄を設置しました。</p>
     <p>・動画やリンクでのジェネレーター紹介に特に制限はありません。</p>
     <p>・ホロメンやホロリスに迷惑のかからない範囲でご使用下さい。</p>
   </div>
@@ -228,6 +231,24 @@
     >
 　</a>
 </div>
+<br>
+<table border="0" cellspacing="0" cellpadding="1">
+  <tr>
+    <td>
+<form method="POST" action="comment.php?rep=1" target="com">
+<span style="font-size:18px;font-weight:100;color:#ff0000">■ </span><b>一言コメントができます。</b>（100字まで）<br>
+<input type="text" id="comment" name="comment" size="80" style="width:535;border:1px solid #00ccff">
+<input type="submit" id="submit" value=" 送信 " style="width:54"> 
+    </td></form>
+  </tr>
+  <tr>
+    <td>
+<div id="commentv" style="font-size:13px;line-height:15px;color:#666699;width:580px;height:160px;border:1px solid #00ccff;padding:8px;overflow-y:scroll;display:none;"></div>
+<iframe name="com" src="comment.php" id="com" style="width:301px;height:201px;frameborder:0px;border:0px;padding:0px;overflow:hidden;display:none;"></iframe>
+    </td>
+  </tr>
+</table>
+<br>
 <div class="box">
   <h2>関連キーワード</h2>
   <p class="small">
@@ -548,6 +569,7 @@
           "ぎゃ": "GYA",
           "ぎゅ": "GYU",
           "ぎょ": "GYO",
+          "ざぁ": "ZAA",
           "しゃ": "SHA",
           "しゅ": "SHU",
           "しょ": "SHO",
@@ -822,7 +844,7 @@ if (unit === "SHI" && next === "I" && i === 0) {
           if (next === "KI") {
             return "TA";
           }
-          return "TO";
+          return "SA";
         }
 
         const map = {
@@ -834,7 +856,6 @@ if (unit === "SHI" && next === "I" && i === 0) {
           "RI": "RYI",
           "RU": "YU",
           "RE": "DE",
-          "RO": "DO",
           "KU": "KYU",
           "GU": "GYU",
           "MU": "MYU"
@@ -888,19 +909,17 @@ if (unit === "SHI" && next === "I" && i === 0) {
           "NU": "NYU",
           "FU": "HYU",
           "RU": "YU",
-          "O": "OE",
           "KO": "KOE",
           "GO": "GOE",
           "SO": "SOE",
           "ZO": "ZOE",
-          "TO": "TOE",
           "DO": "DOE",
-          "NO": "NOE",
           "HO": "HOE",
           "BO": "BOE",
           "PO": "POE",
           "MO": "MOE",
-          "RO": "DOE"
+          "RO": "DOE",
+          "SHI:": "CHA",
         };
 
         if (unit === "KI" || unit === "GI" || unit === "MI") {
@@ -1000,6 +1019,7 @@ if (unit === "SHI" && next === "I" && i === 0) {
           "WA": "ワ",
           "NN": "ン",
 
+          "ZAA": "ザァ",
           "JA": "ジャ",
           "JU": "ジュ",
           "JO": "ジョ",
@@ -1059,17 +1079,17 @@ if (unit === "SHI" && next === "I" && i === 0) {
           "KEYA": "ケャ",
           "GEYA": "ゲャ",
           "OE": "オェ",
-          "KOE": "コェ",
-          "GOE": "ゴェ",
-          "SOE": "ソェ",
-          "ZOE": "ゾェ",
-          "TOE": "トェ",
-          "DOE": "ドェ",
-          "NOE": "ノェ",
-          "HOE": "ホェ",
-          "BOE": "ボェ",
-          "POE": "ポェ",
-          "MOE": "モェ",
+          "KOE": "コォ",
+          "GOE": "ゴォ",
+          "SOE": "ソォ",
+          "ZOE": "ゾォ",
+          "TOE": "トォ",
+          "DOE": "ドォ",
+          "NOE": "ノォ",
+          "HOE": "ホォ",
+          "BOE": "ボォ",
+          "POE": "ポォ",
+          "MOE": "モォ",
           "OEYA": "オェヤ",
 
           "A:": "アー",
@@ -1089,7 +1109,13 @@ if (unit === "SHI" && next === "I" && i === 0) {
           "GE:": "ゲー",
           "GO:": "ゴー",
 
-          "SHI:": "チャ",
+          "SHI:": "シィ",
+          "SA:": "ツァー",
+          "SI:": "ツィー",
+          "SE:": "ツェー",
+          "SO:": "ツォー",
+
+          "NO:": "ニョー",
 
           "PPA:": "ッパー",
           "PPI:": "ッピー",
@@ -1100,7 +1126,7 @@ if (unit === "SHI" && next === "I" && i === 0) {
           "TTE:": "ッテー",
           "TTO:": "ットー",
           "CCHI:": "ッチー",
-          "CCHA:": "ッチャー",
+          "CCHA:": "ッヂャー",
           "CCHU:": "ッチュー",
           "CCHO:": "ッチョー",
           "KKA:": "ッカー",
@@ -1190,13 +1216,14 @@ if (unit === "SHI" && next === "I" && i === 0) {
           "TTE": "ッテ",
           "TTO": "ット",
           "CCHI": "ッチ",
-          "CCHA": "ッチャ",
+          "CCHA": "ッヂャ",
           "CCHU": "ッチュ",
           "CCHO": "ッチョ",
+          "QTSU": "ッツ",
           "KKA": "ッカ",
           "KKI": "ッキ",
           "KKU": "ック",
-          "KKE": "ッケ",
+          "KKE": "ッキャ",
           "KKO": "ッコ",
           "GGA": "ッガ",
           "GGI": "ッギ",
@@ -1232,6 +1259,7 @@ if (unit === "SHI" && next === "I" && i === 0) {
 
         return unit;
       }
+
 
       // 内部発音記号列の後処理を行う。
       // 隣り合う記号の組み合わせを見て、
@@ -1334,6 +1362,22 @@ if (unit === "SHI" && next === "I" && i === 0) {
         const str = units.join(" ");
         const hira = toHiragana(originalText);
 
+	if (str.includes("SHI: DE")) {
+	  return {
+	    type: "partial",
+	    from: "SHI: DE",
+	    to: "チイデ"
+	  };
+	}
+
+        if (str.includes("YA SA SHI:")) {
+          return {
+            type: "partial",
+            from: " YA SA SHI:",
+            to: "ヨートティー"
+          };
+        }
+
         if (hira === "やっぱり") {
           return {
             type: "direct",
@@ -1346,6 +1390,14 @@ if (unit === "SHI" && next === "I" && i === 0) {
             type: "partial",
             from: "NA TSO YO",
             to: "ニャンノヨ"
+          };
+        }
+
+        if (str.endsWith("YE TA")) {
+          return {
+            type: "partial",
+            from: "YE TA",
+            to: "エチャ"
           };
         }
 
@@ -1362,22 +1414,6 @@ if (unit === "SHI" && next === "I" && i === 0) {
             type: "partial",
             from: "NO YU:",
             to: "ニョウ"
-          };
-        }
-
-        if (str.endsWith("SHI: YAN")) {
-          return {
-            type: "partial",
-            from: "SHI: YAN",
-            to: "ティーヤン"
-          };
-        }
-
-        if (str.endsWith("SHI: JAN")) {
-          return {
-            type: "partial",
-            from: "SHI: JAN",
-            to: "ティージャン"
           };
         }
 
