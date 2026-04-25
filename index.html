@@ -423,12 +423,14 @@ document.getElementById("btnReverse").addEventListener("click", function () {
 
             let kana = phonemeUnitsToKatakana(transformedUnits);
 
-            if (phraseResult.type === "direct") {
-              kana = phraseResult.value;
-            } else if (phraseResult.type === "partial") {
-              const fromKana = phonemeUnitsToKatakana(phraseResult.from.split(" "));
-              kana = kana.replace(fromKana, phraseResult.to);
-            }
+if (phraseResult.type === "direct") {
+  kana = phraseResult.value;
+} else if (phraseResult.type === "partials") {
+  for (const rule of phraseResult.rules) {
+    const fromKana = phonemeUnitsToKatakana(rule.from.split(" "));
+    kana = kana.split(fromKana).join(rule.to);
+  }
+}
 
             kataParts.push(kana);
           } else {
@@ -1438,92 +1440,139 @@ if (unit === "SHI" && next === "I" && i === 0) {
 
       // 特定の語や語尾パターンに対して、定型の例外置換をかける。
       // 通常の音変換だけでは再現しにくい読みをここで上書きする。
-      function phraseReplace(units, originalText) {
-        const str = units.join(" ");
-        const hira = toHiragana(originalText);
+function phraseReplace(units, originalText) {
+  const str = units.join(" ");
+  const hira = toHiragana(originalText);
 
-	if (str.includes("SHI: DE")) {
-	  return {
-	    type: "partial",
-	    from: "SHI: DE",
-	    to: "チイデ"
-	  };
-	}
+  // 特定の語が「単語単独」で存在する完全一致の時のみ置き換える
+  // direct は全文置換なので最優先
 
-        if (str.includes("YA SA SHI:")) {
-          return {
-            type: "partial",
-            from: " YA SA SHI:",
-            to: "ヨートティー"
-          };
-        }
+  if (str === "HE EYA:") {
+    return {
+      type: "direct",
+      value: "ヒャ"
+    };
+  }
 
-        if (hira === "やっぱり") {
-          return {
-            type: "direct",
-            value: "ヤッパリャー"
-          };
-        }
+  if (str === "SA NN I DA") {
+    return {
+      type: "direct",
+      value: "ゾイド"
+    };
+  }
 
-        if (str.endsWith("NA TSO YO")) {
-          return {
-            type: "partial",
-            from: "NA TSO YO",
-            to: "ニャンノヨ"
-          };
-        }
+  if (str === "SA NN I") {
+    return {
+      type: "direct",
+      value: "ゾイ"
+    };
+  }
 
-        if (str.endsWith("YE TA")) {
-          return {
-            type: "partial",
-            from: "YE TA",
-            to: "エチャ"
-          };
-        }
+  if (hira === "やっぱり") {
+    return {
+      type: "direct",
+      value: "ヤッパリャー"
+    };
+  }
 
-        if (str.endsWith("TE NN PA YA:")) {
-          return {
-            type: "partial",
-            from: "TE NN PA YA:",
-            to: "ツェンパイ"
-          };
-        }
+  // partial は該当するものを全部集めて、あとで順番に適用する
+  const partialRules = [
+    {
+      mode: "includes",
+      from: "SHI: DE",
+      to: "チイデ"
+    },
+    {
+      mode: "includes",
+      from: "SA KA MA TA SA NN",
+      to: "シャカアッシャ"
+    },
+    {
+      mode: "includes",
+      from: "YA SA SHI:",
+      to: "ヨートティー"
+    },
+    {
+      mode: "includes",
+      from: "DE SHO",
+      to: "ッチョ"
+    },
+    {
+      mode: "includes",
+      from: "TTE KYU",
+      to: "チェキュ"
+    },
+    {
+      mode: "includes",
+      from: "MA CHU YO",
+      to: "マシャ"
+    },
+    {
+      mode: "includes",
+      from: "SA NN",
+      to: "ツァン"
+    },
+    {
+      mode: "includes",
+      from: "O DO RO KI HA JI ME KA YA NO YO RO KO BI HA JI ME DA TTA NO KA",
+      to: "オドロキハジメヨロコビナガノナノナンネネ"
+    },
 
-        if (str.endsWith("NO YU:")) {
-          return {
-            type: "partial",
-            from: "NO YU:",
-            to: "ニョウ"
-          };
-        }
 
-        if (str === "HE EYA:") {
-          return {
-            type: "direct",
-            value: "ヒャ"
-          };
-        }
+    // 語尾の文字列のみ置き換える
+    {
+      mode: "endsWith",
+      from: "NA TSO YO",
+      to: "ニャンノヨ"
+    },
+    {
+      mode: "endsWith",
+      from: "YE TA",
+      to: "エチャ"
+    },
+    {
+      mode: "endsWith",
+      from: "TE NN PA YA:",
+      to: "ツェンパイ"
+    },
+    {
+      mode: "endsWith",
+      from: "NO YU:",
+      to: "ニョウ"
+    }
+  ];
 
-        if (str === "TO NN I DA") {
-          return {
-            type: "direct",
-            value: "ゾイド"
-          };
-        }
+  const matchedRules = [];
 
-        if (str === "TO NN I") {
-          return {
-            type: "direct",
-            value: "ゾイ"
-          };
-        }
+  for (const rule of partialRules) {
+    if (rule.mode === "includes" && str.includes(rule.from)) {
+      matchedRules.push({
+        from: rule.from,
+        to: rule.to
+      });
+      continue;
+    }
 
-        return {
-          type: "normal",
-          value: units
-        };
-      }
+    if (rule.mode === "endsWith" && str.endsWith(rule.from)) {
+      matchedRules.push({
+        from: rule.from,
+        to: rule.to
+      });
+    }
+  }
 
+  if (matchedRules.length > 0) {
+    return {
+      type: "partials",
+      rules: matchedRules
+    };
+  }
+
+  return {
+    type: "normal",
+    value: units
+  };
+}
       // カタカナの聞こえ方から、元の日本語っぽい形を推定復元する。
       // 完全復元ではなく、簡易的な逆変換用。
 function reverseEstimate(text) {
